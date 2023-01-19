@@ -16,10 +16,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
+import jaco.mp3.player.MP3Player;
 
 @Slf4j
 public class Sound extends AudioNotification {
     public String path;
+    private transient MP3Player mp3Player = new MP3Player();
 
     @Override
     protected void fireImpl(String[] triggerValues) {
@@ -38,19 +40,25 @@ public class Sound extends AudioNotification {
         try {
             File soundFile = new File(path);
             if (soundFile.exists()) {
-                Clip clip = AudioSystem.getClip();
+                if (soundFile.getName().endsWith(".mp3")) {
+                    mp3Player.add(soundFile);
+                    mp3Player.play();
+                    mp3Player.getPlayList().clear();
+                } else {
+                    Clip clip = AudioSystem.getClip();
 
-                try (InputStream fileStream = new BufferedInputStream(new FileInputStream(soundFile));
-                     AudioInputStream sound = AudioSystem.getAudioInputStream(fileStream)) {
-                    clip.open(sound);
-                } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-                    log.warn("Unable to load sound", e);
-                    return false;
+                    try (InputStream fileStream = new BufferedInputStream(new FileInputStream(soundFile));
+                         AudioInputStream sound = AudioSystem.getAudioInputStream(fileStream)) {
+                        clip.open(sound);
+                    } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+                        log.warn("Unable to load sound", e);
+                        return false;
+                    }
+                    FloatControl volume = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+                    volume.setValue(this.gain);
+                    log.debug("volume: " + this.gain);
+                    clip.loop(0);
                 }
-                FloatControl volume = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-                volume.setValue(this.gain);
-                log.debug("volume: " + this.gain);
-                clip.loop(0);
                 return true;
             }
         } catch (Exception e) {

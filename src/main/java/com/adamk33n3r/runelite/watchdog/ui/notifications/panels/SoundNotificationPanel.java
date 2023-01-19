@@ -21,7 +21,7 @@ public class SoundNotificationPanel extends NotificationPanel {
             JFileChooser fileChooser = (JFileChooser) ev.getSource();
             sound.path = fileChooser.getSelectedFile().getAbsolutePath();
             onChangeListener.run();
-        }, sound.path, "Sound Files", supportedExtensions));
+        }, sound.path, "Sound Files", "wav", "mp3"));
 
         VolumeSlider volumeSlider = new VolumeSlider(sound);
         volumeSlider.setBackground(ColorScheme.MEDIUM_GRAY_COLOR);
